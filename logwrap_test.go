@@ -34,7 +34,7 @@ func TestLogger(t *testing.T) {
 	}()
 
 	// log.LstdFlags is a timestamp, and we don't want to mock time here
-	// (which would make this excercise unnecessary complex)
+	// (which would make this exercise unnecessary complex)
 	var buf bytes.Buffer
 	l := log.New(&buf, "", log.Lshortfile)
 	SetLogger(&stdlogLogger{l.Output})
