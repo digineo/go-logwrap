@@ -13,6 +13,14 @@ type Logger interface {
 
 var logger Logger = &stdlogLogger{}
 
+// Infof logs a message with INFO log level. format and args implement
+// fmt.Printf semantics.
+func Infof(format string, args ...interface{}) { logger.Infof(format, args...) }
+
+// Errorf logs a message with ERROR log level. format and args implement
+// fmt.Printf semantics.
+func Errorf(format string, args ...interface{}) { logger.Errorf(format, args...) }
+
 // SetLogger updates the logger fastd uses. If l is nil, we'll use a
 // thin wrapper around the standard log package.
 func SetLogger(l Logger) {
