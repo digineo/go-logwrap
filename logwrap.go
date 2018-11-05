@@ -1,4 +1,4 @@
-package logwrap // import "github.com/digineo/go-logwrap"
+package logwrap
 
 import (
 	"fmt"
