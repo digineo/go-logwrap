@@ -6,16 +6,38 @@
 A thin layer around Go's standard library logger. It was extracted from
 `github.com/digineo/fastd/fastd`.
 
-`logwrap` exports two functions, `Infof()` and `Errorf()`. Without
-any further configuration, the forward messages to `golang.org/pkg/log`.
+Consumers of this package should simply instantiate a log instance, like
+so:
 
-To plug-in your own favorite logger, call `logwrap.SetLogger(Logger)`.
-`Logger` only needs to satisfy this interface:
+```go
+import "github.com/digineo/go-logwrap"
+
+var (
+	log       = &logwrap.Instance{}
+	SetLogger = log.SetLogger
+)
+```
+
+This then allows your consumers to plug in their own favorite logger:
+
+```go
+import (
+	"github.com/digineo/fastd/fastd"
+	"github.com/sirupsen/logrus"
+)
+
+func init() {
+	fastd.SetLogger(logrus.WithField("component", "pkg"))
+}
+```
+
+You are not limited to `sirupsen/logrus` -- your logger only needs to
+implement this interface:
 
 ```go
 type Logger interface {
-  Infof(format string, args ...interface{})
-  Errorf(format string, args ...interface{})
+	Infof(format string, args ...interface{})
+	Errorf(format string, args ...interface{})
 }
 ```
 

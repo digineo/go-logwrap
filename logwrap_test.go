@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"os"
 	"path"
 	"runtime"
 	"testing"
@@ -28,16 +27,13 @@ func check(t *testing.T, buf *bytes.Buffer, expected string) {
 	}
 }
 
-func TestLogger(t *testing.T) {
-	defer func() {
-		SetLogger(nil) // undo
-	}()
-
+func TestInstance(t *testing.T) {
 	// log.LstdFlags is a timestamp, and we don't want to mock time here
 	// (which would make this exercise unnecessary complex)
 	var buf bytes.Buffer
 	l := log.New(&buf, "", log.Lshortfile)
-	SetLogger(&stdlogLogger{l.Output})
+	logger := &Instance{}
+	logger.o = l.Output
 
 	{
 		logger.Infof("test %d", 1)
@@ -51,24 +47,31 @@ func TestLogger(t *testing.T) {
 	}
 }
 
-func TestUpdateStdLogOutput(t *testing.T) {
-	defer func() { // undo changes
-		log.SetOutput(os.Stderr)
-		log.SetFlags(log.LstdFlags)
-	}()
+type altLogger struct {
+	buf bytes.Buffer
+}
 
-	var buf bytes.Buffer
-	log.SetFlags(log.Lshortfile)
-	log.SetOutput(&buf)
+func (alt *altLogger) Infof(format string, a ...interface{}) {
+	fmt.Fprintf(&alt.buf, format, a...)
+	alt.buf.WriteRune('\n')
+}
+
+func (alt *altLogger) Errorf(format string, a ...interface{}) {
+	fmt.Fprintf(&alt.buf, format, a...)
+	alt.buf.WriteRune('\n')
+}
+
+func TestAlternative(t *testing.T) {
+	alt := &altLogger{}
+	logger := &Instance{}
+	logger.SetLogger(alt)
 
 	{
-		logger.Errorf("test %d", 3)
-		fn, ln := getShortfile()
-		check(t, &buf, fmt.Sprintf("%s:%d: ERROR - test 3\n", fn, ln-1))
+		logger.Infof("test alt %d", 1)
+		check(t, &alt.buf, fmt.Sprintf("test alt 1\n"))
 	}
 	{
-		logger.Infof("test %d", 4)
-		fn, ln := getShortfile()
-		check(t, &buf, fmt.Sprintf("%s:%d: INFO - test 4\n", fn, ln-1))
+		logger.Errorf("test alt %d", 2)
+		check(t, &alt.buf, fmt.Sprintf("test alt 2\n"))
 	}
 }
